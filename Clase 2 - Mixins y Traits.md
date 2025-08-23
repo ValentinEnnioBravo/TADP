@@ -326,6 +326,8 @@ println(cc.describe())
 
 ### Tabla Comparativa
 
+En sí, más allá de que en Scala usen la palabra clave **trait** nosotros sabemos que las decisiones tomadas para Ruby aplican mas o menos bien para Scala. Ya que la funcionalidad que cumple Scala para los traits es la "misma" que usa Ruby para los mixines. 
+
 | Aspecto | Mixins | Traits |
 |---------|--------|--------|
 | **Granularidad** | Módulos completos | Control fino, nivel de método |
@@ -451,3 +453,100 @@ Los **Mixins** y **Traits** representan dos filosofías diferentes para abordar 
 - **Traits** proporcionan una aproximación más segura y controlada, exigiendo resolución explícita de conflictos y ofreciendo composición simétrica, perfecta para sistemas complejos donde la previsibilidad es crucial.
 
 La elección entre ellos no es binaria, sino que depende del contexto, los requisitos del proyecto y las prioridades del desarrollo. Ambos mecanismos han demostrado su valor en diferentes ecosistemas y continúan evolucionando para abordar los desafíos modernos de la reutilización de código y la composición modular.
+
+# Continuando el ejemplo de Age of Empires
+ Teníamos el inconveniente de que Guerrero no podía heredar de Atacante y de Defensor a la vez. Lo que haremos, será modificar el diagrama para que en vez de heredar el comportamiento de Atacante y Defensor, transformar a esos dos en mixines. Quedando de esta manera:
+ ![alt text](image-5.png)
+ 
+
+
+ En Ruby quedaría de la siguiente manera
+ ```
+module Atacante
+  attr_accessor :potOfensivo
+
+  def atacar(otro)
+    daño = self.potOfensivo() - otro.potDefensivo()
+    otro.recibirDaño(daño)
+  end
+end
+
+class Guerrero
+  include Atacante
+  include Defensor
+
+  ...
+end
+ ```
+ 
+Ahora, **no queda claro en la linearización quién predomina por sobre el otro**. El Guerrero ¿es más Atacante o más Defensor?
+
+Ese es un primer problema, ahora predomina el Defensor, pero en un futuro, ¿puedo saber si el Defensor predominaba por algo en particular o si fue elegido así de forma arbitraria?
+
+## Kamikaze
+Es Atacante y es Defensor, pero cuando ataca después explota. ¿Cómo lo implementamos?
+1. Si pensamos desde la herencia simple podríamos extender Kamikaze de Guerrero, que en un principio no parece errado, pero quizás no se parecen tanto, y es simplemente una herencia totalmente mecánica (porque tienen los mismos métodos). La pregunta pasa a ser más a nivel negocio porque contamos con mixines.
+2. No necesito que Kamikaze herede de guerrero, puedo hacerlo simplemente incluyendo el kamikaze y utilizando los dos mixines. Y la lógica extra la agrego en la clase kamikaze luego de llamara a super
+![alt text](image-6.png)
+
+La búsqueda cuando kamikaze llama a super es la siguiente:
+```
+Kamikaze → Defensor → Atacante → RubyObject
+```
+Entonces vimos como se lineariza en combinación con un mixin. No necesitamos heredar de algo solo porque nos cerraba, todavía tenemos "la lógica de la herencia simple".
+
+## Introducción de "Conflictos"
+Surge la opción de **reposar**, un comportamiento el cual debe ser diferente para los Atacantes y para los Defensores. El atacante gana +1 de potencial ofensivo y el atacante recupera 10 puntos.
+
+![alt text](image-7.png)
+
+Entonces:
+- Las Murallas no reposan
+- Los Kamikazes solo reposan como Atacantes (hicimos bien en no heredar Kamikaze de Guerrero)
+- El problema está en los Guerreros, que reposan de las dos maneras → **tenemos un conflicto**
+
+### Muralla
+No hay drama porque solo utiliza 1 mixin, es como si fuera una herencia simple, overrideo el comportamiento reposar del Defensor para que no haga nada
+![alt text](image-8.png)
+
+### Kamikaze
+![alt text](image-9.png)
+Tenemos un problema, habíamos puesto que el Kamikaze utilizaba Atacante y Defensor pero que iba a buscar primero la lógica del Defensor. Ahora tenemos que cambiar ese orden para que busque primero el método reposar en el Atacante. Quedando de esta manera:
+![alt text](image-11.png)
+Y la búsqueda de esta:
+```
+Kamikaze → Defensor → Atacante → RubyObject
+```
+### Guerrero
+El Guerrero debe reposar de ambas formas. **No hay orden en el que pueda hacer esto**. No puedo overridear porque no sé, desde Guerrero, cuál es esa lógica de Atacante y Defensor. Soluciones:
+1. #### Mixins Puros (pura aspera fea)
+Solución más pura de mixin, exclusiva de Ruby.
+
+![alt text](image-13.png)
+
+El Guerrero busca la solución en Defensor y luego en Atacante, pero ya encuentra la lógica en Defensor. Entonces:
+- Agregamos `super()` tanto en el Defensor, como en el Atacante, a modo de que de cualquier forma que se ordene Atacante y Defensor, para aquellos que utilizan a ambos tengan a alguien a quien llamar que utilice reposar.
+- Creamos un modulo Unidad, con un método `reposar()` que cuando reposa no hace nada, es **una construcción terminadora**. 
+- Le agregamos al Guerrero el mixin `Unidad` 
+
+Quedando la solución final de esta forma
+
+![alt text](image-15.png)
+
+De esta forma, aunque no sepamos quién es el super, tenemos esta entidad terminadora Unidad para cortar la recursividad.
+
+2. #### Mixins con Extras (impura linda)
+Es una solución más fácil pero más impura.
+
+![alt text](image-16.png)
+- Incluyo primero al Atacante, para que encuentre el método reposar en el Atacante.
+- Utilizar `alias_method(:reposar_atacante, :reposar)` para crear una copia del método reposar que conoce (el de Atacante) y llamarla con otro nombre (reposar_atacante). Como tiene otro nombre, ya no hay más colisión.
+- Se incluye al Defensor, para que tome el método reposar. El problema es que yo necesito que mi Guerrero haga estos dos métodos cuando lo manden a reposar(), es por esto que finalmente:
+- Creo un alias `alias_method(:reposar_defensor, :reposar)` que, debido al orden en que fue declarado, va a copiar la lógica incluída en el Defensor.
+- Ahora que tengo métodos distintos puedo overridear `reposar()`. Es una álgebra de métodos muy parecida a la de traits.
+
+Cuando necesité granularidad, utilicé por un lado la linealización para los casos que me interesaba (como Kamikaze), y al mismo tiempo tengo una construcción más interesante de Ruby para trabajar de forma explícita cuando quiero.
+
+El orden en el que incluí Atacante y Defensor y declaré los alias_method hace que Ruby sea altamente destructivo, si cambio el orden explota todo. 
+
+**Moraleja:** *No siempre lo más puro es la mejor solución, a veces es beneficioso utilizar construcciones no tan apegadas a "las ideas de alguien (Ducasse o Bracha)" y encontrar cosas superadoras en romper las herramientas utilizando trucos o "chanchadas utiles".*
