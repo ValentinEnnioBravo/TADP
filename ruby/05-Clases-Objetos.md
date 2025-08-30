@@ -196,6 +196,8 @@ class Biblioteca
     end
   end
   
+  # A partir de acá para abajo es todo privado
+  private
   def libros_disponibles
     disponibles = @libros.select(&:disponible)
     if disponibles.any?
@@ -205,6 +207,8 @@ class Biblioteca
     end
   end
   
+  # Acá vuelve a ser público
+  public 
   def estadisticas
     total_libros = @libros.length
     libros_prestados = @libros.count { |libro| !libro.disponible }
