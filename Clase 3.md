@@ -115,7 +115,7 @@ Siguiendo el ejemplo de Guerreros, el árbol quedaría de esta manera:
 Surge entonces la necesidad de tener un elemento intermedio al que se le pueda implementar el comportamiento. Estos serán las **singleton_class**. Cada clase tendrá este compañero que le dará los servicios particulares de esa clase.
 - Cada **singleton_class** hereda de una singleton_class superior, con el fin de poder **heredar métodos de clase**. Esto es decisión de Ruby, porque podría heredar directo de clase y ser un método estático.
 Todas las flechas rojas de singleton_class van a `Class`, porque son clases.
-- ¿Y qué pasa con las flechas verdes de las singleton_class? ¿No necesitan otra singleton_class de la singleton_class? No, Ruby implementa una búsqueda LAZY, por lo que solo va a existir esa relación verde si se le pone un comportamiento a una singleton_class.
+- ¿Y qué pasa con las flechas verdes de las singleton_class? ¿No necesitan otra singleton_class de la singleton_class? No, Ruby implementa una búsqueda LAZY, por lo que solo va a existir esa relación verde con otra singleton_class si se le pone un comportamiento a una singleton_class.
 - Pero Ruby dice que **cualquier objeto puede tener métodos para él solo**, que lo distinguen de su clase. Por esto, hace lo mismo que hizo con las clases, le crea una singleton_class a cada objeto. Estas, por ser clases su flecha roja apunta a `Class`.
 - Finalmente, la singleton_class debe llegar a su super clase. Por esto `#marine` hereda de `Guerrero`
 
