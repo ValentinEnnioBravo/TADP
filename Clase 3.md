@@ -89,7 +89,13 @@ Posibilidad de modificar un tipo, una clase o un objeto para que satisfazga las 
 ## Metamodelo en Ruby
 Siguiendo el ejemplo de Guerreros, el árbol quedaría de esta manera:
 
-![alt text](image-20.png)
+![alt text](image-23.png)
 
 ### Objeto auto clase
 En Ruby todo es un objeto, los números, strings, arrays y también las Clases. Las clases mismas son instancias de Class. Clases tienen singleton_class Como son objetos, también pueden tener métodos definidos “solo para ellas”.
+Las clases son objetos en Ruby, instancias de Class, y por eso pueden tener métodos individuales en su **singleton_class**.
+
+El método lookup hace lo siguiente entonces:
+```
+unaClase -> #unaClase(Singleton) -> Superclass -> Superclass (n flechas azules)
+```
