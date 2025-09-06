@@ -1,6 +1,8 @@
 # Mixins y Traits: Conceptos Fundamentales y Comparación
 En la clase anterior, habíamos planteado la idea de que, con herencia simple, **una clase no puede heredar de dos clases a la vez**.
-Es por esto que buscaremos una forma de solucionar este problema.
+Es por esto que buscaremos una forma de solucionar este problema sin repetir código.
+
+*"No vivas con ventanas rotas"*
 
 ## Introducción
 
@@ -218,6 +220,8 @@ Por ende los roles que termina cumpliendo la clase son:
 
 Los **traits** son unidades de reutilización de comportamiento que ofrecen **composición simétrica y control explícito** sobre los conflictos. A diferencia de los mixins, los traits exigen resolución manual de ambigüedades, proporcionando mayor granularidad y control al desarrollador.
 
+Ducasse introduce un álgebra que permite tener un control más fino, pero también exige más trabajo.
+
 En el ejemplo de A, B, C y D: 
 
 Se dice que B y C no son combinables, a menos que uno los resuelva a mano. Se da un control más fino.
@@ -229,9 +233,9 @@ Se dice que B y C no son combinables, a menos que uno los resuelva a mano. Se da
 ### Características Fundamentales
 
 1. **Composición conmutativa y asociativa**: El orden de composición no afecta el resultado
-2. **Flattening**: El comportamiento es equivalente a tener los métodos definidos directamente en la clase. 
+2. **Flattening**: El comportamiento es equivalente a tener los métodos definidos directamente en la clase. "Inyecta" código de los traits en las clases, los traits no existen en runtime. Es como la solución del copy-paste pero hecha herramienta. "Es como un script que copia y pega por mi y luego lo quita".
 3. **Sin estado por defecto**: Los traits no incluyen estado automáticamente
-4. **Resolución explícita**: Los conflictos deben resolverse manualmente
+4. **Resolución explícita**: Los conflictos deben resolverse manualmente (álgebra).
 
 ### Propiedades Únicas de los Traits
 
@@ -330,13 +334,18 @@ En sí, más allá de que en Scala usen la palabra clave **trait** nosotros sabe
 
 | Aspecto | Mixins | Traits |
 |---------|--------|--------|
-| **Granularidad** | Módulos completos | Control fino, nivel de método |
-| **Resolución de conflictos** | Automática (linearización) | Manual (explícita) |
-| **Manejo de estado** | Incluido por defecto | Sin estado por defecto |
-| **Composición** | Lineal, dependiente del orden | Simétrica, independiente del orden |
-| **Rol de las clases** | Instanciación de objetos | Instanciación + glue code |
-| **Fragilidad** | Puede introducir dependencias | Elimina fragilidad por diseño |
-| **Complejidad** | Menor (automático) | Mayor (control explícito) |
+| **Granularidad** | A nivel de Módulos | A nivel de método, defino método por método |
+| **Resolución de conflictos** | Automática (linearización) | Algebra (manual) |
+| **Mec de seleccion** | Automática (linearización) | Algebra (manual) |
+| **Implementación** | Linearization (el mixin existe en runtime) | Flattering (se inyecta el código, no existe el trait) |
+| **Manejo de estado** | X? | Tienen estado |
+| **Rol de las clases** | Instanciación de objetos y repositorio de código (métodos/lógica) | Instanciación + glue code (componer traits) |
+
+Mixin no tiene estado, es uno de los problemas principales, ya que nada dice que en una relación 
+
+```C -|> B -|> A``` 
+
+A y B pueden tener un método que utiliz un atributo x que en C es privado.
 
 ### Resolución de Conflictos
 
@@ -362,26 +371,6 @@ class MyClass extends TraitA with TraitB {
   }
 }
 ```
-
-### Cuándo Usar Cada Uno
-
-#### Usar Mixins cuando:
-- Se busca **reutilización rápida y flexible** del comportamiento
-- La resolución automática no es crítica
-- Se valora la **comodidad** sobre la seguridad
-- Se trabaja en proyectos pequeños o prototipos
-- Los conflictos son poco frecuentes o manejables
-
-**Ejemplo de uso ideal**: Incluir funcionalidades pequeñas y modulares como logging, helpers, o utilidades en clases existentes.
-
-#### Usar Traits cuando:
-- Se necesita **composición segura y previsible**
-- Es crítico evitar conflictos implícitos
-- Se requiere **control explícito** sobre el comportamiento
-- Se trabaja en sistemas grandes o complejos
-- La **seguridad y claridad** son prioritarias
-
-**Ejemplo de uso ideal**: Modelar comportamientos complejos en sistemas robustos, APIs públicas, o aplicaciones de gran escala.
 
 ## Rol de las Clases en Ambos Paradigmas
 
@@ -454,6 +443,9 @@ Los **Mixins** y **Traits** representan dos filosofías diferentes para abordar 
 
 La elección entre ellos no es binaria, sino que depende del contexto, los requisitos del proyecto y las prioridades del desarrollo. Ambos mecanismos han demostrado su valor en diferentes ecosistemas y continúan evolucionando para abordar los desafíos modernos de la reutilización de código y la composición modular.
 
+## ¿Por qué algunas tecnologías prefieren Traits?
+Porque modificar el lenguaje para que pueda aceptar mixines es más complejo que aceptar traits. Ya que todos los cambios que hacen falta para implementar traits en una tecnología que usa herencia simple son plásticos, a nivel compilador. Al aplanarse la JVM trabaja sobre herencia simple.
+
 # Continuando el ejemplo de Age of Empires
  Teníamos el inconveniente de que Guerrero no podía heredar de Atacante y de Defensor a la vez. Lo que haremos, será modificar el diagrama para que en vez de heredar el comportamiento de Atacante y Defensor, transformar a esos dos en mixines. Quedando de esta manera:
  ![alt text](image-5.png)
@@ -461,7 +453,7 @@ La elección entre ellos no es binaria, sino que depende del contexto, los requi
 
 
  En Ruby quedaría de la siguiente manera
- ```
+ ```ruby
 module Atacante
   attr_accessor :potOfensivo
 
@@ -489,6 +481,8 @@ Es Atacante y es Defensor, pero cuando ataca después explota. ¿Cómo lo implem
 2. No necesito que Kamikaze herede de guerrero, puedo hacerlo simplemente incluyendo el kamikaze y utilizando los dos mixines. Y la lógica extra la agrego en la clase kamikaze luego de llamara a super
 ![alt text](image-6.png)
 
+Se le pone 3 cabezas ala relación que pesa más.
+
 La búsqueda cuando kamikaze llama a super es la siguiente:
 ```
 Kamikaze → Defensor → Atacante → RubyObject
@@ -496,7 +490,7 @@ Kamikaze → Defensor → Atacante → RubyObject
 Entonces vimos como se lineariza en combinación con un mixin. No necesitamos heredar de algo solo porque nos cerraba, todavía tenemos "la lógica de la herencia simple".
 
 ## Introducción de "Conflictos"
-Surge la opción de **reposar**, un comportamiento el cual debe ser diferente para los Atacantes y para los Defensores. El atacante gana +1 de potencial ofensivo y el atacante recupera 10 puntos.
+Surge la opción de **reposar**, un comportamiento el cual debe ser diferente para los Atacantes y para los Defensores. El atacante gana +1 de potencial ofensivo y el defensor recupera 10 puntos.
 
 ![alt text](image-7.png)
 
@@ -507,12 +501,18 @@ Entonces:
 
 ### Muralla
 No hay drama porque solo utiliza 1 mixin, es como si fuera una herencia simple, overrideo el comportamiento reposar del Defensor para que no haga nada
+
 ![alt text](image-8.png)
 
 ### Kamikaze
 ![alt text](image-9.png)
+
 Tenemos un problema, habíamos puesto que el Kamikaze utilizaba Atacante y Defensor pero que iba a buscar primero la lógica del Defensor. Ahora tenemos que cambiar ese orden para que busque primero el método reposar en el Atacante. Quedando de esta manera:
+
 ![alt text](image-11.png)
+
+Parece un cambio simple, pero nada garantiza que este cambio, que resulta ser MUY importante está rompiendo algo o si romperá algo en el futuro. Es un cambio muy hostil, es neceario o poner un comentario o recordar de alguna forma por qué se tomó ese orden, para que si en un futuro estoy en la misma situación sepa por qué habia elegido ese orden.
+
 Y la búsqueda de esta:
 ```
 Kamikaze → Defensor → Atacante → RubyObject
@@ -526,14 +526,28 @@ Solución más pura de mixin, exclusiva de Ruby.
 
 El Guerrero busca la solución en Defensor y luego en Atacante, pero ya encuentra la lógica en Defensor. Entonces:
 - Agregamos `super()` tanto en el Defensor, como en el Atacante, a modo de que de cualquier forma que se ordene Atacante y Defensor, para aquellos que utilizan a ambos tengan a alguien a quien llamar que utilice reposar.
-- Creamos un modulo Unidad, con un método `reposar()` que cuando reposa no hace nada, es **una construcción terminadora**. 
+- Creamos un modulo Unidad, con un método `reposar()` que cuando reposa no hace nada, es **una construcción terminadora**. Para que, en el caso de que si un Atacante intenta llamar a super y no tiene a nadie atrás tenga Unidad.
 - Le agregamos al Guerrero el mixin `Unidad` 
 
-Quedando la solución final de esta forma
+Solo faltaría que Atacante y Defensor incluyan Unidad, quedando de esta manera:
 
 ![alt text](image-15.png)
 
 De esta forma, aunque no sepamos quién es el super, tenemos esta entidad terminadora Unidad para cortar la recursividad.
+
+En el caso de la cadena de Guerrero quedaría de esta forma:
+
+```
+Guerrero → Defensor → Unidad → Atacante → Unidad
+```
+
+Tenemos un problema, Unidad está cortando la recursividad antes de hacer lo que hace un Atacante. Pero, para estos casos donde se repite en la cadena (Unidad en este caso) Ruby elimina esa unidad, quedando de la siguiente forma: Guerrero → Defensor → **~~Unidad~~** → Atacante → Unidad
+
+Entonces:
+
+```
+Guerrero → Defensor → Atacante → Unidad
+```
 
 2. #### Mixins con Extras (impura linda)
 Es una solución más fácil pero más impura.
@@ -549,4 +563,8 @@ Cuando necesité granularidad, utilicé por un lado la linealización para los c
 
 El orden en el que incluí Atacante y Defensor y declaré los alias_method hace que Ruby sea altamente destructivo, si cambio el orden explota todo. 
 
-**Moraleja:** *No siempre lo más puro es la mejor solución, a veces es beneficioso utilizar construcciones no tan apegadas a "las ideas de alguien (Ducasse o Bracha)" y encontrar cosas superadoras en romper las herramientas utilizando trucos o "chanchadas utiles".*
+Es una solución bastante sucia, es más, estoy utilizando un álgebra muy parecida a las de trait.
+
+**Moraleja:** *No siempre lo más puro es la mejor solución, a veces es beneficioso utilizar construcciones no tan apegadas a "las ideas de alguien (Ducasse o Bracha)" y encontrar cosas superadoras en romper las herramientas utilizando trucos o "chanchadas utiles".
+Pero la solución 1 es mucho más declarativa.
+*
