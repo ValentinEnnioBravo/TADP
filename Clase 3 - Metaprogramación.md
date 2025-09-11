@@ -26,32 +26,6 @@ Es *metaprogramar* en el mismo lenguaje que los programas.
 ## Metaprogramación en Ruby
 Utilizaremos la consola `pry`.
 ### Comandos pry
-<<<<<<< HEAD:Clase 3 - Metaprogramación.md
-| Comando                              | Funcionalidad                                                                 | Detalles |
-|--------------------------------------|-------------------------------------------------------------------------------|--------|
-| `require_relative`                   | Importar archivo                                                              |-|
-| `unObjeto.class`                     | Dice la clase de un objeto                                                    |-|
-| `unObjeto.class.superclass `         | Dice la superclase de un objeto                                               |-|
-| `unaClase.ancestors `                | Muestra todos los superiores a un objeto                                      | En forma de lista `[]`|
-| `unaClase.is_a? otraClase `          | Devuelve booleano                                                             | -|
-| `unObjeto = Clase.new`               | Instanciar un objeto                                                          |-|
-| `class B < A end`                    | Crear clase B y heredarla de A                                                |-|
-| `unObjeto.methods`                   | Llama a un método                                                             |-|
-| `unaClase.singleton_class`           | Permite obtener la eigenclass de unaClase, *metaclass* **el objeto unaClase** | Puede servir para ver los métodos de clase, no de instancia|
-| `unObjeto.methods.include? :method`  | Dice si los métodos incluyen un método                                        |-|
-| `unObjeto.unMetodo`                  | Llama al método y muestra el valor de retorno                                 |-|
-| `unaClase.instance_methods`          | Muestra los métodos que implementa la clase y su superclase                   |`instance_methods(false)` no incluye a la superclase|
-| `unaClase.instance_method :unMetodo` | Devuelve un método de esa clase no bindeado a ningún objeto                   |-|
-| `unMetodoNoBindeado.bind(unObjeto)`  | Bindea un método no bindeado a un objeto                                      |No se puede bindear un método a un objeto de una clase que no tenga ese método.|
-| `unObjeto.send(:unMetodo)`           | Llama al método y muestra el valor de retorno                                 | Manda un mensaje explícitamente, más tipo **introspection**. Permite llamar a métodos privados. |
-| `unObjeto.method(:unMetodo)`         | Devuelve una instancia de method                                              | Un método bindeado a la instancia. Lo puedo guardar |`variable = unObjeto.method(:unMetodo)`|
-| `unMetodo.call`                      | Llama a un método bindeado a una instancia                                    |-|
-| `unObjeto.respond_to? :unMetodo`     | Dice si ese objeto responde a ese método                                      |-|
-|`unMetodo.parameters`| Dice todos los metodos de ese objeto| Los muestra como una lista de tuplas `[[:req, :un_danio]]`, el primero nos dice qué tipo de parametro es y el otro el nombre. |
-|`unMetodo.arity`| Dice la cantidad de parámetros de ese método|-|
-|`unObjeto.method(:unMetodo).receiver`| Devuelve a quién está bindeado un método |-|
-|`unMetodoNoBindeado.owner`| Dice la clase a la que pertenece el metodo, **quien implementó el método** |-|
-=======
 | Comando                                       | Funcionalidad                                                                        | Detalles                                                                                                                                |
 |-----------------------------------------------|--------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
 | `require_relative`                            | Importar archivo                                                                     | -                                                                                                                                       |
@@ -76,7 +50,6 @@ Utilizaremos la consola `pry`.
 | `unMetodo.arity`                              | Dice la cantidad de parámetros de ese método                                         | -                                                                                                                                       |
 | `unObjeto.method(:unMetodo).receiver`         | Devuelve a quién está bindeado un método                                             | -                                                                                                                                       |
 | `unMetodoNoBindeado.owner`                    | Dice la clase a la que pertenece el metodo, **quien implementó el método**           | -                                                                                                                                       |
->>>>>>> 3c75dc55768d9b0b018b2a21de4c86f99b4acbd4:Clase 3.md
 ---
 #### Variables de Instancia
 |Comando|Funcionalidad|Detalles|
