@@ -27,6 +27,9 @@ Es la definición de tipo basada en la estructura que debe tener un objeto (los 
 ### Subtipado
 Hace referencia a que los valores pertenecen a distintos tipos.
 
+## Falsos Negativos y Positivos
+Entre la unión de los programas que el compilador dice que corren y los que corren se encuentran los programas que corren y compilan. Si un programa dería correr pero no corre porque el compilador no lo permite son llamados falsos negativos. Si un programa no debería corer pero corre porque el compilador lo permite es un falso negativo.
+
 # Scala
 ### Definicion de clase
 Las Clases son funciones que instancian objetos.
@@ -111,3 +114,43 @@ Tenemos un problema. Se especificó, que la condición recibe Object y devuelve 
 La solución única a esto es apagar el checkeador de tipos, esto se hace con **asInstanceOf**, le decimos al compilador "confiá en mí, que yo te voy a enviar un Guerrero".
 
 El problema de esto, es que para cada uso tengo que especificar. **Scala empujó la vara un poco más** para evitar tener uqe hacer el asInstanceOf.
+
+## Set
+```scala
+var unaColeccion: Set[Animal] = Set{new Vaca, new Caballo, new Granero}
+unaColeccion.filter {animal => animal.estaGordo}
+```
+La definición de Set es Set[A], Set recibe elementos entoncrs del tipo A. La A es lo que llamamos **tipo paramétrico**.
+
+## Type Bounds
+- **Upper Bounds**: <: || :> - Lo que está del lado del menor tiene que ser tipo del otro
+- **Lower Bounds**: >: || :< - Lo que está del lado del mayor debe ser supertipo del otroz
+
+Entonces por ejemplo:
+```scala
+class Corral[A <: Animal](val animales: Set[A]) {
+    def bla(a: A): Unit = {
+        a.come
+        a.estaGordo
+    }
+}
+```
+## Varianza
+Relación entre el subtipado de un tipo paramétrico teniendo en cuenta como funciona el subtipado de los parámetros que recibe. Cómo varía la relación consigo mismo dependiendo el subtipo que tiene. Ya sé que A es de un tipo u otro (tipado), que es o no de otro (subtipado); ahora, tengo T[A] es subtipo de T[B]? En principio en algunos casos no. 
+- El Set es invariante porque un Set de Vacas no es un Subtipo de Set de Animales. A estos casos se los llama **invarianza**
+- Es invariante porque si no lo fuera se podrían hacer operaciones sobre el mismo que deje el Set en un estado inconsistente (por ejemplo agregar un animal Caballo a un Set de Vacas)
+
+
+Que una clase sea invariante o no depende de la definición de esa clase. En el caso del Corral, al decri[A <: Animal] estamos diciendo que es invariante. 
+
+### Reglas
+- (A =:= B) => (T[A] <: T[B]) -> Invarianza
+- (A =:= B) => (T[A] <: T[B]) -> Bivarianza (T[A] es subtipo de T[B] no importa si está arriba o abajo) (no tenés varianza)
+
+### Ejercicio Interesante
+indicar si se crea un `var f: Vaca => Vaca = ???` qué funciones podrían guardarse en la variable f
+- `def g(vaca: Vaca): Vaca = ???` -> **Podría**. Todo tipo es, por lo menos, invariante
+- `def h(vaca: Vaca): Animal = ???` -> **No podría**
+- `def i(vaca: Vaca): VacaLoca = ???` -> **Podría**. Algo que retorna una VacaLoca es algo que retorna una Vaca. El acto de retornar una VacaLoca es retornar una Vaca, todas las operaciones a posteriori se satisfacen porque VacaLoca es subtipo de Vaca.
+- `def j(vacaLoca: VacaLoca): Vaca = ???`
+- `def i(animal: Animal): Vaca = ???`
